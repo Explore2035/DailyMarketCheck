@@ -71,15 +71,10 @@ def update_html():
         if not q:
             sidebar_html += f'<div class="market-item"><span class="market-name">{display}</span><span class="market-val">—</span></div>\n          '
             continue
-        price, dp = q.get("c", 0), q.get("dp", 0)
+        dp = q.get("dp", 0)
         arrow = "▲" if dp >= 0 else "▼"
         color = "up" if dp >= 0 else "dn"
-        if price >= 10000:
-            fmt = f"{arrow} ${price:,.0f}"
-        elif price >= 100:
-            fmt = f"{arrow} {price:,.2f}"
-        else:
-            fmt = f"{arrow} ${price:.2f}"
+        fmt = f"{arrow} {abs(dp):.2f}%"
         sidebar_html += f'<div class="market-item"><span class="market-name">{display}</span><span class="market-val {color}">{fmt}</span></div>\n          '
     
     if not ticker_html or not sidebar_html:
