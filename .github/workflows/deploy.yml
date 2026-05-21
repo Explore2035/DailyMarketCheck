@@ -1,0 +1,33 @@
+name: DailyMarketCheck
+on:
+  schedule:
+    - cron: '30 11 * * 1-5'
+    - cron: '30 13 * * 6'
+    - cron: '0 13-20 * * 1-5'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build-and-update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install anthropic feedparser requests
+      - name: Run pipeline
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+        run: python pipeline.py
+      - name: Update prices
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+        run: python prices.py || true
+      - name: Commit changes
+        run: |
+          git config user.name "DailyMarketCheck"
+          git config user.email "bot@dailymarketcheck.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Daily update $(date -u +'%Y-%m-%d %H:%M UTC')" && git push
