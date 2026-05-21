@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>DailyMarketCheck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap"/>
+<style>
+  :root {
+    --black: #0a0a0a;
+    --ink: #1a1a1a;
+    --dark: #111111;
+    --panel: #f5f4f0;
+    --border: #d4cfc4;
+    --accent: #ff6600;
+    --accent2: #0033cc;
+    --green: #007a3d;
+    --red: #c0392b;
+    --gold: #b8860b;
+    --text: #1a1a1a;
+    --muted: #6b6560;
+    --serif: 'IBM Plex Serif', Georgia, serif;
+    --sans: 'IBM Plex Sans', Helvetica, sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: #faf9f5;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── TOP BAR ── */
+  .top-bar {
+    background: var(--black);
+    color: #ccc;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #333;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .top-bar-left { color: #888; }
+  .top-bar-right { color: var(--accent); letter-spacing: 0.5px; }
+
+  /* ── TICKER TAPE ── */
+  .ticker-wrap {
+    background: var(--ink);
+    overflow: hidden;
+    border-bottom: 2px solid var(--accent);
+    padding: 6px 0;
+  }
+  .ticker-inner {
+    display: flex;
+    gap: 40px;
+    animation: ticker 60s linear infinite;
+    width: max-content;
+  }
+  .ticker-item {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: #ddd;
+    white-space: nowrap;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .ticker-item .sym { color: #fff; font-weight: 600; }
+  .ticker-item .up { color: #00c853; }
+  .ticker-item .dn { color: #ff3d3d; }
+  @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+  /* ── MASTHEAD ── */
+  .masthead {
+    background: var(--black);
+    color: white;
+    text-align: center;
+    padding: 28px 20px 20px;
+    border-bottom: 4px solid var(--accent);
+    position: relative;
+  }
+  .masthead-name {
+    font-family: var(--serif);
+    font-size: clamp(36px, 6vw, 72px);
+    font-weight: 600;
+    letter-spacing: -1px;
+    line-height: 1;
+    color: #fff;
+  }
+  .masthead-name span { color: var(--accent); }
+  .masthead-tagline {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: #888;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 8px;
+  }
+  .masthead-date {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: #666;
+    margin-top: 6px;
+    border-top: 1px solid #333;
+    padding-top: 8px;
+  }
+
+  /* ── NAV ── */
+  .main-nav {
+    background: var(--ink);
+    border-bottom: 1px solid #333;
+    padding: 0 20px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+  }
+  .nav-tab {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    color: #aaa;
+    padding: 11px 16px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .nav-tab:hover { color: #fff; }
+  .nav-tab.active { color: #fff; border-bottom-color: var(--accent); }
+
+  /* ── LAYOUT ── */
+  .site-wrap { max-width: 1400px; margin: 0 auto; padding: 0; }
+
+  /* ── PAGE ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── NEWS PAGE ── */
+  .news-layout {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 0;
+    min-height: 80vh;
+  }
+  .news-main { border-right: 1px solid var(--border); }
+  .news-sidebar { background: var(--panel); }
+
+  /* Category filter bar */
+  .cat-filter {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 20px;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+  .cat-btn {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    background: white;
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    cursor: pointer;
+    border-radius: 2px;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.15s;
+  }
+  .cat-btn:hover { background: var(--ink); color: white; border-color: var(--ink); }
+  .cat-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+  /* Article grid */
+  .articles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .article-card {
+    background: white;
+    padding: 18px 20px;
+    text-decoration: none;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: background 0.12s;
+    border-left: 3px solid transparent;
+  }
+  .article-card:hover {
+    background: #fffbf5;
+    border-left-color: var(--accent);
+  }
+  .card-source {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+  .card-title {
+    font-family: var(--serif);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--ink);
+  }
+  .article-card:hover .card-title { color: var(--accent2); }
+  .card-summary {
+    font-size: 13px;
+    color: #4a4540;
+    line-height: 1.5;
+    flex: 1;
+  }
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #eee;
+    padding-top: 8px;
+    margin-top: 4px;
+  }
+  .card-date { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+  .card-read { font-family: var(--mono); font-size: 10px; color: var(--accent); }
+
+  .cat-header {
+    padding: 16px 20px 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
+  }
+  .cat-header h2 {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar-section {
+    border-bottom: 1px solid var(--border);
+    padding: 16px;
+  }
+  .sidebar-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--accent);
+    display: inline-block;
+  }
+
+  /* Mini dividend table */
+  .div-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .div-table tr { border-bottom: 1px solid #e8e4dc; }
+  .div-table td { padding: 5px 3px; }
+  .div-table .sym { font-family: var(--mono); font-weight: 600; color: var(--accent2); }
+  .div-table .yld { font-family: var(--mono); font-weight: 600; color: var(--green); text-align: right; }
+
+  /* Market snapshot */
+  .market-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid #e8e4dc;
+    font-size: 12px;
+  }
+  .market-item:last-child { border-bottom: none; }
+  .market-name { font-weight: 500; color: var(--ink); }
+  .market-val { font-family: var(--mono); }
+  .market-val.up { color: var(--green); }
+  .market-val.dn { color: var(--red); }
+
+  /* ── DIVIDENDS PAGE ── */
+  .data-page { padding: 30px 24px; }
+  .data-page h1 {
+    font-family: var(--serif);
+    font-size: 28px;
+    margin-bottom: 6px;
+    color: var(--ink);
+  }
+  .data-page .subtitle {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 24px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    background: white;
+    border: 1px solid var(--border);
+  }
+  .data-table th {
+    background: var(--ink);
+    color: white;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 10px 14px;
+    text-align: left;
+  }
+  .data-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+  }
+  .data-table tr:hover td { background: #fffbf5; }
+  .ticker {
+    font-family: var(--mono);
+    font-weight: 600;
+    color: var(--accent2);
+    font-size: 13px;
+  }
+  .yield-val {
+    font-family: var(--mono);
+    font-weight: 600;
+    color: var(--green);
+    font-size: 14px;
+  }
+  .ipo-price {
+    font-family: var(--mono);
+    color: var(--ink);
+  }
+  .sector-badge {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 2px 7px;
+    border-radius: 2px;
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  /* ── ABOUT PAGE ── */
+  .about-wrap { max-width: 700px; margin: 40px auto; padding: 0 24px 60px; }
+  .about-wrap h1 {
+    font-family: var(--serif);
+    font-size: 32px;
+    margin-bottom: 8px;
+    color: var(--ink);
+  }
+  .about-wrap p {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #4a4540;
+    margin-bottom: 14px;
+  }
+  .disclaimer {
+    background: #fff8e1;
+    border-left: 4px solid var(--gold);
+    padding: 14px 18px;
+    font-size: 12px;
+    color: #5a4a00;
+    line-height: 1.6;
+    margin-top: 24px;
+    border-radius: 0 4px 4px 0;
+  }
+
+  /* ── FOOTER ── */
+  .site-footer {
+    background: var(--black);
+    color: #666;
+    font-family: var(--mono);
+    font-size: 11px;
+    text-align: center;
+    padding: 20px;
+    border-top: 2px solid #222;
+    line-height: 1.8;
+  }
+  .site-footer span { color: #444; }
+  .disclaimer-footer {
+    margin-top: 8px;
+    color: #444;
+    font-size: 10px;
+    max-width: 700px;
+    margin: 8px auto 0;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .news-layout { grid-template-columns: 1fr; }
+    .news-sidebar { display: none; }
+    .articles-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="top-bar">
+  <span class="top-bar-left">DAILYMARKETCHECK.COM</span>
+  <span class="top-bar-right">Updated: May 21, 2026 · 01:08 UTC</span>
+</div>
+
+<!-- Ticker tape -->
+<div class="ticker-wrap">
+  <div class="ticker-inner" id="ticker">
+    <span class="ticker-item"><span class="sym">SPY</span> <span class="up">▲ 0.38%</span></span>
+    <span class="ticker-item"><span class="sym">QQQ</span> <span class="up">▲ 0.62%</span></span>
+    <span class="ticker-item"><span class="sym">DIA</span> <span class="dn">▼ 0.11%</span></span>
+    <span class="ticker-item"><span class="sym">IWM</span> <span class="up">▲ 0.24%</span></span>
+    <span class="ticker-item"><span class="sym">AAPL</span> <span class="up">▲ 1.2%</span></span>
+    <span class="ticker-item"><span class="sym">NVDA</span> <span class="up">▲ 2.4%</span></span>
+    <span class="ticker-item"><span class="sym">MSFT</span> <span class="dn">▼ 0.3%</span></span>
+    <span class="ticker-item"><span class="sym">AMZN</span> <span class="up">▲ 0.9%</span></span>
+    <span class="ticker-item"><span class="sym">TSLA</span> <span class="dn">▼ 1.1%</span></span>
+    <span class="ticker-item"><span class="sym">BTC</span> <span class="up">▲ 3.1%</span></span>
+    <span class="ticker-item"><span class="sym">10Y</span> 4.42%</span>
+    <span class="ticker-item"><span class="sym">GOLD</span> <span class="up">▲ 0.5%</span></span>
+    <span class="ticker-item"><span class="sym">OIL</span> <span class="dn">▼ 0.7%</span></span>
+    <span class="ticker-item"><span class="sym">USD/EUR</span> 0.923</span>
+    <!-- Duplicate for seamless loop -->
+    <span class="ticker-item"><span class="sym">SPY</span> <span class="up">▲ 0.38%</span></span>
+    <span class="ticker-item"><span class="sym">QQQ</span> <span class="up">▲ 0.62%</span></span>
+    <span class="ticker-item"><span class="sym">DIA</span> <span class="dn">▼ 0.11%</span></span>
+    <span class="ticker-item"><span class="sym">IWM</span> <span class="up">▲ 0.24%</span></span>
+    <span class="ticker-item"><span class="sym">AAPL</span> <span class="up">▲ 1.2%</span></span>
+    <span class="ticker-item"><span class="sym">NVDA</span> <span class="up">▲ 2.4%</span></span>
+    <span class="ticker-item"><span class="sym">MSFT</span> <span class="dn">▼ 0.3%</span></span>
+    <span class="ticker-item"><span class="sym">AMZN</span> <span class="up">▲ 0.9%</span></span>
+    <span class="ticker-item"><span class="sym">TSLA</span> <span class="dn">▼ 1.1%</span></span>
+    <span class="ticker-item"><span class="sym">BTC</span> <span class="up">▲ 3.1%</span></span>
+    <span class="ticker-item"><span class="sym">10Y</span> 4.42%</span>
+    <span class="ticker-item"><span class="sym">GOLD</span> <span class="up">▲ 0.5%</span></span>
+  </div>
+</div>
+
+<!-- Masthead -->
+<div class="masthead">
+  <div class="masthead-name">Daily<span>Market</span>Check</div>
+  <div class="masthead-tagline">Markets · IPOs · Dividends · Bonds · Stocks</div>
+  <div class="masthead-date">May 21, 2026 · 01:08 UTC</div>
+</div>
+
+<!-- Main Nav -->
+<nav style="background:#0a0a0a;border-bottom:1px solid #222;">
+  <div class="site-wrap">
+    <div style="display:flex;overflow-x:auto;">
+      <button class="nav-tab active" onclick="showPage('news',this)">News</button>
+      <button class="nav-tab" onclick="showPage('dividends',this)">Top Dividends</button>
+      <button class="nav-tab" onclick="showPage('ipos',this)">IPO Calendar</button>
+      <button class="nav-tab" onclick="showPage('about',this)">About</button>
+    </div>
+  </div>
+</nav>
+
+<div class="site-wrap">
+
+  <!-- ── NEWS PAGE ── -->
+  <div class="page active" id="page-news">
+    <div class="cat-filter">
+      <button class="cat-btn active" onclick="showCat('market-news')" id="catbtn-market-news">Market News</button>
+<button class="cat-btn " onclick="showCat('stocks')" id="catbtn-stocks">Stocks</button>
+<button class="cat-btn " onclick="showCat('ipos')" id="catbtn-ipos">IPOs</button>
+<button class="cat-btn " onclick="showCat('dividends')" id="catbtn-dividends">Dividends</button>
+<button class="cat-btn " onclick="showCat('bonds-and-fixed-income')" id="catbtn-bonds-and-fixed-income">Bonds & Fixed Income</button>
+<button class="cat-btn " onclick="showCat('etfs')" id="catbtn-etfs">ETFs</button>
+<button class="cat-btn " onclick="showCat('crypto')" id="catbtn-crypto">Crypto</button>
+<button class="cat-btn " onclick="showCat('economy-and-fed')" id="catbtn-economy-and-fed">Economy & Fed</button>
+
+    </div>
+    <div class="news-layout">
+      <div class="news-main">
+        
+        <div class="cat-section" id="cat-market-news" style="display:block">
+          <div class="cat-header"><h2>Market News</h2></div>
+          <div class="articles-grid">
+            <a class="article-card" href="https://finance.yahoo.com/m/ceac2592-664b-3412-92e2-ff5aa640c81d/dow-jones-futures-fall-after.html?.tsrc=rss" target="_blank" rel="noopener">
+              <div class="card-source">finance.yahoo.com</div>
+              <div class="card-title">Dow Jones Futures Fall After Strong Nvidia Earnings; SpaceX Files For Huge IPO</div>
+              <div class="card-summary">Nvidia stock fell late despite strong earnings. Elon Musk's SpaceX released its filing for a mammoth IP. Stocks rallied Wednesday as oil prices dived on Iran hopes....</div>
+              <div class="card-footer">
+                <span class="card-date">Thu, 21 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://www.fool.com/investing/2026/05/20/why-phreesia-stock-got-clocked-today/?.tsrc=rss" target="_blank" rel="noopener">
+              <div class="card-source">finance.yahoo.com</div>
+              <div class="card-title">Why Phreesia Stock Got Clocked Today</div>
+              <div class="card-summary">An analyst downgraded his recommendation on the company....</div>
+              <div class="card-footer">
+                <span class="card-date">Thu, 21 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://finance.yahoo.com/m/a24a3ee0-546e-39d5-a158-05a295c2224a/review-%26-preview%3A-safe-passage.html?.tsrc=rss" target="_blank" rel="noopener">
+              <div class="card-source">finance.yahoo.com</div>
+              <div class="card-title">Review & Preview: Safe Passage</div>
+              <div class="card-summary">Optimism from the White House helped send oil lower and stocks higher today.  President Donald Trump said on Wednesday that the U.S. is in the final stages of Iran peace talks as two Chinese supertank...</div>
+              <div class="card-footer">
+                <span class="card-date">Wed, 20 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://www.fool.com/investing/2026/05/20/why-micron-stock-jumped-today/?.tsrc=rss" target="_blank" rel="noopener">
+              <div class="card-source">finance.yahoo.com</div>
+              <div class="card-title">Why Micron Stock Jumped Today</div>
+              <div class="card-summary">Micron stock gained ground in a bullish day for tech stocks....</div>
+              <div class="card-footer">
+                <span class="card-date">Wed, 20 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://www.marketwatch.com/story/voxs-sale-marks-the-end-of-an-era-for-a-once-booming-form-of-digital-media-heres-how-it-all-came-undone-8a15d530?mod=mw_rss_topstories" target="_blank" rel="noopener">
+              <div class="card-source">marketwatch.com</div>
+              <div class="card-title">Vox’s sale marks the end of an era for a once-booming form of digital media. Here’s how it all came undone.</div>
+              <div class="card-summary">Companies like BuzzFeed, Vice and Vox were once worth billions, but shifting audiences and declines in advertising have sent their values plummeting....</div>
+              <div class="card-footer">
+                <span class="card-date">Thu, 21 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://www.marketwatch.com/story/gen-z-may-be-shying-away-from-cosmetics-as-higher-gas-prices-hit-spending-9f9ccbf8?mod=mw_rss_topstories" target="_blank" rel="noopener">
+              <div class="card-source">marketwatch.com</div>
+              <div class="card-title">Gen Z may be shying away from buying cosmetics, as higher gas prices hit spending</div>
+              <div class="card-summary">E.l.f. Beauty says it will cut prices on some products, following tariff-related increases last year and concerns about the rising cost of gas....</div>
+              <div class="card-footer">
+                <span class="card-date">Wed, 20 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://www.marketwatch.com/story/investors-are-flocking-to-an-offshore-crypto-platform-for-an-early-shot-at-trading-the-spacex-ipo-4ec49f10?mod=mw_rss_topstories" target="_blank" rel="noopener">
+              <div class="card-source">marketwatch.com</div>
+              <div class="card-title">Investors are flocking to an offshore crypto platform for an early shot at trading the SpaceX IPO</div>
+              <div class="card-summary">A fast-growing offshore market is giving investors around the world an opportunity to trade what is expected to be the biggest IPO in history before it even happens — all while completely bypassing Wa...</div>
+              <div class="card-footer">
+                <span class="card-date">Wed, 20 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://www.marketwatch.com/story/i-inherited-a-house-my-cpa-says-i-should-sell-within-a-year-to-avoid-capital-gains-is-he-right-d0909486?mod=mw_rss_topstories" target="_blank" rel="noopener">
+              <div class="card-source">marketwatch.com</div>
+              <div class="card-title">I inherited a house. My CPA says I should sell within a year to avoid capital gains. Is he right?</div>
+              <div class="card-summary">“We plan to sell it to another family member for the appraised value.”...</div>
+              <div class="card-footer">
+                <span class="card-date">Wed, 20 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a></div>
+        </div>
+        <div class="cat-section" id="cat-stocks" style="display:none">
+          <div class="cat-header"><h2>Stocks</h2></div>
+          <div class="articles-grid">
+            <a class="article-card" href="https://www.thestreet.com/investing/stocks/is-jpmorgan-chase-a-good-long-term-investment?.tsrc=rss" target="_blank" rel="noopener">
+              <div class="card-source">finance.yahoo.com</div>
+              <div class="card-title">Is JPMorgan Chase a good long-term investment in 2026?</div>
+              <div class="card-summary">With a market cap of $803 billion, JPMorgan has been the biggest and most influential bank in the U.S. since 2011 (and the largest in the world since 2016), but its success lies light-years away from ...</div>
+              <div class="card-footer">
+                <span class="card-date">Thu, 21 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://finance.yahoo.com/m/ceac2592-664b-3412-92e2-ff5aa640c81d/dow-jones-futures-fall-after.html?.tsrc=rss" target="_blank" rel="noopener">
+              <div class="card-source">finance.yahoo.com</div>
+              <div class="card-title">Dow Jones Futures Fall After Strong Nvidia Earnings; SpaceX Files For Huge IPO</div>
+              <div class="card-summary">Nvidia stock fell late despite strong earnings. Elon Musk's SpaceX released its filing for a mammoth IP. Stocks rallied Wednesday as oil prices dived on Iran hopes....</div>
+              <div class="card-footer">
+                <span class="card-date">Thu, 21 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://finance.yahoo.com/sectors/technology/articles/jensen-huang-says-found-brand-002831398.html?.tsrc=rss" target="_blank" rel="noopener">
+              <div class="card-source">finance.yahoo.com</div>
+              <div class="card-title">Jensen Huang says he’s found a ‘brand new’ $200B market for Nvidia</div>
+              <div class="card-summary">The next big thing for Nvidia will be CPUs for AI agents, $200 billion worth, CEO Jensen Huang predicts....</div>
+              <div class="card-footer">
+                <span class="card-date">Thu, 21 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://finance.yahoo.com/markets/stocks/articles/nvidia-gets-tepid-reaction-forecast-210054064.html?.tsrc=rss" target="_blank" rel="noopener">
+              <div class="card-source">finance.yahoo.com</div>
+              <div class="card-title">Nvidia Tells Skeptical Investors That AI Is Ready to Go Mainstream</div>
+              <div class="card-summary">(Bloomberg) -- Nvidia Corp., facing more investor skepticism, used its latest quarterly report to tout progress in diversifying the company, which aims to rely less on the giant data center operators ...</div>
+              <div class="card-footer">
+                <span class="card-date">Thu, 21 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://www.investing.com/news/stock-market-news/samsung-shares-jump-on-lastminute-union-deal-to-avoid-strike-4702873" target="_blank" rel="noopener">
+              <div class="card-source">investing.com</div>
+              <div class="card-title">Samsung shares jump on last-minute union deal to avoid strike</div>
+              <div class="card-summary">...</div>
+              <div class="card-footer">
+                <span class="card-date">2026-05-21 00:55</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://www.investing.com/news/stock-market-news/bound-for-mars-elon-musks-spacex-unveils-filing-for-blockbuster-ipo-4702463" target="_blank" rel="noopener">
+              <div class="card-source">investing.com</div>
+              <div class="card-title">SpaceX IPO filing lays bare losses and Musk control as it stakes future on AI</div>
+              <div class="card-summary">...</div>
+              <div class="card-footer">
+                <span class="card-date">2026-05-21 00:48</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://www.investing.com/news/stock-market-news/australian-regulator-flags-rising-global-private-credit-risks-steps-up-oversight-4702865" target="_blank" rel="noopener">
+              <div class="card-source">investing.com</div>
+              <div class="card-title">Australian regulator flags rising global private credit risks, steps up oversight</div>
+              <div class="card-summary">...</div>
+              <div class="card-footer">
+                <span class="card-date">2026-05-21 00:42</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://www.investing.com/news/stock-market-news/wall-st-futures-slip-after-nvidia-earnings-beat-walmart-results-on-tap-4702843" target="_blank" rel="noopener">
+              <div class="card-source">investing.com</div>
+              <div class="card-title">Wall St futures slip after Nvidia earnings beat; Walmart results on tap</div>
+              <div class="card-summary">...</div>
+              <div class="card-footer">
+                <span class="card-date">2026-05-21 00:26</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a></div>
+        </div>
+        <div class="cat-section" id="cat-ipos" style="display:none">
+          <div class="cat-header"><h2>IPOs</h2></div>
+          <div class="articles-grid">
+            <a class="article-card" href="https://finance.yahoo.com/markets/stocks/articles/market-minute-5-11-26-141500342.html?.tsrc=rss" target="_blank" rel="noopener">
+              <div class="card-source">finance.yahoo.com</div>
+              <div class="card-title">Market Minute 5-11-26- Mideast Talks Founder, But Markets Hold Up</div>
+              <div class="card-summary">Stocks are hanging in despite a rise in oil tied to foundering Middle East deal talks. Gold and silver are mixed, while Treasuries are lower and the dollar is flat....</div>
+              <div class="card-footer">
+                <span class="card-date">Mon, 11 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://finance.yahoo.com/markets/stocks/articles/asian-dividend-stocks-watch-may-043353117.html?.tsrc=rss" target="_blank" rel="noopener">
+              <div class="card-source">finance.yahoo.com</div>
+              <div class="card-title">Asian Dividend Stocks To Watch In May 2026</div>
+              <div class="card-summary">As global markets navigate the complexities of geopolitical tensions and fluctuating oil prices, Asian equities have shown resilience, with China's recent credit outlook upgrade highlighting macroecon...</div>
+              <div class="card-footer">
+                <span class="card-date">Tue, 05 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://finance.yahoo.com/markets/stocks/articles/bill-ackman-pershing-square-raise-232739846.html?.tsrc=rss" target="_blank" rel="noopener">
+              <div class="card-source">finance.yahoo.com</div>
+              <div class="card-title">Bill Ackman’s Pershing Square to Raise $5 Billion from IPO</div>
+              <div class="card-summary">Closely followed investor Bill Ackman looks likely to raise $5 billion from the upcoming initial public offering (IPO) of his investment ​management company Pershing Square. Meet Samuel – Your Persona...</div>
+              <div class="card-footer">
+                <span class="card-date">Mon, 27 Apr 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://finance.yahoo.com/markets/stocks/articles/inspire-brands-picks-banks-ipo-175149000.html?.tsrc=rss" target="_blank" rel="noopener">
+              <div class="card-source">finance.yahoo.com</div>
+              <div class="card-title">Inspire Brands Picks Banks For IPO That Could Raise $2 Billion</div>
+              <div class="card-summary">Roark-backed restaurant group taps JPMorgan and Bank of America, with listing possibly coming as soon as this year...</div>
+              <div class="card-footer">
+                <span class="card-date">Fri, 17 Apr 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://www.iposcoop.com/the-ipo-buzz-spacex-spcx-proposed-files-to-go-public/" target="_blank" rel="noopener">
+              <div class="card-source">iposcoop.com</div>
+              <div class="card-title">The IPO Buzz: SpaceX (SPCX Proposed) Files to Go Public</div>
+              <div class="card-summary">To the moon, to Mars and beyond – and oh, yes, to go public, too: Elon Musk filed the S-1 for SpaceX (SPCX Proposed) after the closing bell today – Wednesday, May 20, 2026- without disclosing the term...</div>
+              <div class="card-footer">
+                <span class="card-date">Wed, 20 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://www.iposcoop.com/the-ipo-buzz-lincoln-international-lcln-prices-ipo-at-20-top-of-range-3/" target="_blank" rel="noopener">
+              <div class="card-source">iposcoop.com</div>
+              <div class="card-title">The IPO Buzz: Lincoln International (LCLN) Prices IPO at $20 – Top – & Stock Jumps</div>
+              <div class="card-summary">Lincoln International (LCLN) priced its IPO at $20.00 – the top of its $18.00-to-$20.00 range – and sold 21.05 million shares – the number in the prospectus – to raise $421 million on Tuesday night, M...</div>
+              <div class="card-footer">
+                <span class="card-date">Wed, 20 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://www.iposcoop.com/the-ipo-buzz-lincoln-international-lcln-prices-ipo-at-20-top-of-range-2/" target="_blank" rel="noopener">
+              <div class="card-source">iposcoop.com</div>
+              <div class="card-title">The IPO Buzz: Lincoln International (LCLN) Prices IPO at $20 – Top of Range</div>
+              <div class="card-summary">Lincoln International (LCLN) priced its IPO at $20.00 – the top of its $18.00-to-$20.00 range – and sold 21.05 million shares – the number in the prospectus – to raise $421 million on Tuesday night, M...</div>
+              <div class="card-footer">
+                <span class="card-date">Wed, 20 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a></div>
+        </div>
+        <div class="cat-section" id="cat-dividends" style="display:none">
+          <div class="cat-header"><h2>Dividends</h2></div>
+          <div class="articles-grid"></div>
+        </div>
+        <div class="cat-section" id="cat-bonds-and-fixed-income" style="display:none">
+          <div class="cat-header"><h2>Bonds & Fixed Income</h2></div>
+          <div class="articles-grid">
+            <a class="article-card" href="https://finance.yahoo.com/m/f86187ea-f7bc-316e-a813-b11757ab9b97/treasury-yields%2C-dollar-fall.html?.tsrc=rss" target="_blank" rel="noopener">
+              <div class="card-source">finance.yahoo.com</div>
+              <div class="card-title">Treasury Yields, Dollar Fall Along With Oil Prices</div>
+              <div class="card-summary">Treasury yields and the dollar deepen their decline as oil prices fall. Brent and WTI are down about 4%, reflecting hopes that the Strait of Hormuz could reopen soon. Meanwhile, U.S. crude inventories...</div>
+              <div class="card-footer">
+                <span class="card-date">Wed, 20 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://finance.yahoo.com/m/099e236e-d156-33e8-a743-aaba5dfa982c/treasury-yields-slip-as-bond.html?.tsrc=rss" target="_blank" rel="noopener">
+              <div class="card-source">finance.yahoo.com</div>
+              <div class="card-title">Treasury Yields Slip as Bond Selloff Pauses</div>
+              <div class="card-summary">The Treasury selloff takes a break, causing yields to fall slightly as markets worry about the inflationary consequences of the U.S.-Iran standoff. Oil futures slip, but remain high enough to keep pol...</div>
+              <div class="card-footer">
+                <span class="card-date">Wed, 20 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://finance.yahoo.com/m/061e9eaf-05c0-3442-9460-e3007d60d155/treasury-yields-little.html?.tsrc=rss" target="_blank" rel="noopener">
+              <div class="card-source">finance.yahoo.com</div>
+              <div class="card-title">Treasury Yields Little Changed as Markets Watch Global Oil Inventories</div>
+              <div class="card-summary">Bond markets are steady as Wall Street worries about the global supply of oil amid no signs that tankers will soon resume normal traffic through the Strait of Hormuz. President Trump again threatens I...</div>
+              <div class="card-footer">
+                <span class="card-date">Mon, 18 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://finance.yahoo.com/m/46f48d03-6ca6-330d-8d38-4d94bffdd344/macro-indicators-at-a.html?.tsrc=rss" target="_blank" rel="noopener">
+              <div class="card-source">finance.yahoo.com</div>
+              <div class="card-title">Macro Indicators at a Crossroads. Charts of Dow Industrials, Small Caps, 10-Year Yield Tell the Story.</div>
+              <div class="card-summary">Interest rates, economic growth expectations, inflation trends, and credit conditions often determine which parts of the market lead and which fall behind.  Dow Industrials trading near the very round...</div>
+              <div class="card-footer">
+                <span class="card-date">Fri, 15 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a></div>
+        </div>
+        <div class="cat-section" id="cat-etfs" style="display:none">
+          <div class="cat-header"><h2>ETFs</h2></div>
+          <div class="articles-grid">
+            <a class="article-card" href="https://finance.yahoo.com/video/emerging-markets-could-soar-says-204141643.html?.tsrc=rss" target="_blank" rel="noopener">
+              <div class="card-source">finance.yahoo.com</div>
+              <div class="card-title">Emerging markets could soar this year, says CIO</div>
+              <div class="card-summary">STORY: "If you look at earnings revisions in emerging markets, they're actually up 30%. So there is a lot of growth happening overseas that investors are not necessarily paying close attention to," sa...</div>
+              <div class="card-footer">
+                <span class="card-date">Wed, 20 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://247wallst.com/investing/2026/05/20/ultys-weekly-distributions-look-generous-until-you-see-what-happened-to-the-share-price/?.tsrc=rss" target="_blank" rel="noopener">
+              <div class="card-source">finance.yahoo.com</div>
+              <div class="card-title">ULTY’s Weekly Distributions Look Generous Until You See What Happened to the Share Price</div>
+              <div class="card-summary">YieldMax Ultra Option Income Strategy ETF (NYSEARCA:ULTY) distributes weekly amounts in the $0.37 to $0.52 range through 2026, an annualized run rate the fund’s marketing has pinned at 77%, 104%, even...</div>
+              <div class="card-footer">
+                <span class="card-date">Wed, 20 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://247wallst.com/investing/2026/05/20/vanguards-94-billion-mid-cap-etf-is-quietly-beating-the-sp-500-with-a-fifty-year-old-strategy/?.tsrc=rss" target="_blank" rel="noopener">
+              <div class="card-source">finance.yahoo.com</div>
+              <div class="card-title">Vanguard’s $94 Billion Mid Cap ETF Is Quietly Beating the S&P 500 With a Fifty Year Old Strategy</div>
+              <div class="card-summary">Most retirees who own an S&amp;P 500 index fund hold a portfolio dominated by mega-cap technology, with mid-sized businesses getting almost no weight despite making up a meaningful share of corporate ...</div>
+              <div class="card-footer">
+                <span class="card-date">Wed, 20 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://247wallst.com/investing/2026/05/20/jepqs-9-5-yield-is-impressive-but-the-eln-counterparty-risk-is-the-hidden-cost/?.tsrc=rss" target="_blank" rel="noopener">
+              <div class="card-source">finance.yahoo.com</div>
+              <div class="card-title">JEPQ’s 9.5% Yield Is Impressive, But the ELN Counterparty Risk Is the Hidden Cost</div>
+              <div class="card-summary">Retirees chasing the JPMorgan Nasdaq Equity Premium Income ETF (NASDAQ:JEPQ) for its near 9.5% distribution yield are buying something more layered than they think. The fund pairs a Nasdaq-100 stock b...</div>
+              <div class="card-footer">
+                <span class="card-date">Wed, 20 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a></div>
+        </div>
+        <div class="cat-section" id="cat-crypto" style="display:none">
+          <div class="cat-header"><h2>Crypto</h2></div>
+          <div class="articles-grid">
+            <a class="article-card" href="https://cointelegraph.com/markets/bitcoin-coinbase-premium-slidse-to-six-week-lows-but-there-is-a-silver-lining?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound" target="_blank" rel="noopener">
+              <div class="card-source">cointelegraph.com</div>
+              <div class="card-title">Key Bitcoin price metric used by bulls falls to six-week low, but there’s a silver lining</div>
+              <div class="card-summary">Profit-taking by Bitcoin traders pushed the Coinbase BTC premium to a six-week low, but demand from longer-term traders put a clear support under the range lows....</div>
+              <div class="card-footer">
+                <span class="card-date">Wed, 20 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://cointelegraph.com/news/missouri-attorney-general-lawsuit-coinflip-scams?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound" target="_blank" rel="noopener">
+              <div class="card-source">cointelegraph.com</div>
+              <div class="card-title">Missouri AG sues crypto ATM operator CoinFlip ‘for enabling scams’</div>
+              <div class="card-summary">The lawsuit followed the launch of a December 2025 investigation by Missouri authorities into several crypto ATM companies, citing “deceptive fee structures” and scams....</div>
+              <div class="card-footer">
+                <span class="card-date">Wed, 20 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://cointelegraph.com/news/coinbase-powers-flipcash-stablecoin-launch-with-usdc-backed-usdf-on-solana?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound" target="_blank" rel="noopener">
+              <div class="card-source">cointelegraph.com</div>
+              <div class="card-title">Coinbase expands branded stablecoin infrastructure business with Flipcash USDF launch</div>
+              <div class="card-summary">The launch marks Coinbase’s latest push into white-label stablecoin infrastructure for businesses building branded digital payment and settlement systems....</div>
+              <div class="card-footer">
+                <span class="card-date">Wed, 20 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://cointelegraph.com/markets/bitcoin-rallies-through-77k-despite-spot-btc-etf-outflows-topping-2b?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound" target="_blank" rel="noopener">
+              <div class="card-source">cointelegraph.com</div>
+              <div class="card-title">Bitcoin rallies through $77K despite spot BTC ETF outflows topping $2B</div>
+              <div class="card-summary">Bitcoin finds footing above $77,000 despite investors’ worry over BigTech earnings results and billion-dollar outflows from the BTC ETFs....</div>
+              <div class="card-footer">
+                <span class="card-date">Wed, 20 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://www.coindesk.com/policy/2026/05/20/polymarket-moves-to-list-parlays-while-sec-seeks-public-input-on-prediction-market-etfs" target="_blank" rel="noopener">
+              <div class="card-source">coindesk.com</div>
+              <div class="card-title">Polymarket moves to list parlays while SEC seeks public input on prediction market ETFs</div>
+              <div class="card-summary">...</div>
+              <div class="card-footer">
+                <span class="card-date">Wed, 20 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://www.coindesk.com/markets/2026/05/20/bitcoin-miners-rise-as-nvidia-posts-blowout-earnings-and-strong-outlook" target="_blank" rel="noopener">
+              <div class="card-source">coindesk.com</div>
+              <div class="card-title">Bitcoin miners tied to AI rise as Nvidia posts big earnings beat and strong outlook</div>
+              <div class="card-summary">...</div>
+              <div class="card-footer">
+                <span class="card-date">Wed, 20 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://www.coindesk.com/policy/2026/05/20/federal-reserve-proposes-limited-master-accounts-long-pursued-by-crypto-firms" target="_blank" rel="noopener">
+              <div class="card-source">coindesk.com</div>
+              <div class="card-title">Federal Reserve proposes limited master accounts long pursued by crypto firms</div>
+              <div class="card-summary">...</div>
+              <div class="card-footer">
+                <span class="card-date">Wed, 20 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://www.coindesk.com/markets/2026/05/20/elon-musk-s-spacex-holds-18-712-bitcoin-at-fair-value-of-usd1-29-billion-ipo-filing-shows" target="_blank" rel="noopener">
+              <div class="card-source">coindesk.com</div>
+              <div class="card-title">Elon Musk's SpaceX held 18,712 bitcoin at fair value of $1.29 billion at end of Q1, IPO filing shows</div>
+              <div class="card-summary">...</div>
+              <div class="card-footer">
+                <span class="card-date">Wed, 20 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a></div>
+        </div>
+        <div class="cat-section" id="cat-economy-and-fed" style="display:none">
+          <div class="cat-header"><h2>Economy & Fed</h2></div>
+          <div class="articles-grid">
+            <a class="article-card" href="https://www.federalreserve.gov/newsevents/pressreleases/other20260520a.htm" target="_blank" rel="noopener">
+              <div class="card-source">federalreserve.gov</div>
+              <div class="card-title">Federal Reserve Board requests public comment on a proposal to establish a "payment account," which legally eligible financial institutions could use for the specific purpose of clearing and settling their payments</div>
+              <div class="card-summary">Federal Reserve Board requests public comment on a proposal to establish a &quot;payment account,&quot; which legally eligible financial institutions could use for the specific purpose of clearing and...</div>
+              <div class="card-footer">
+                <span class="card-date">Wed, 20 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://www.federalreserve.gov/newsevents/pressreleases/monetary20260520a.htm" target="_blank" rel="noopener">
+              <div class="card-source">federalreserve.gov</div>
+              <div class="card-title">Minutes of the Federal Open Market Committee, April 28-29, 2026</div>
+              <div class="card-summary">Minutes of the Federal Open Market Committee, April 28-29, 2026...</div>
+              <div class="card-footer">
+                <span class="card-date">Wed, 20 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://www.federalreserve.gov/newsevents/pressreleases/other20260515a.htm" target="_blank" rel="noopener">
+              <div class="card-source">federalreserve.gov</div>
+              <div class="card-title">Federal Reserve Board names Jerome H. Powell as chair pro tempore; Powell will serve as chair pro tempore until Kevin M. Warsh is sworn in as the new chair</div>
+              <div class="card-summary">Federal Reserve Board names Jerome H. Powell as chair pro tempore; Powell will serve as chair pro tempore until Kevin M. Warsh is sworn in as the new chair...</div>
+              <div class="card-footer">
+                <span class="card-date">Fri, 15 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a>
+            <a class="article-card" href="https://www.federalreserve.gov/newsevents/pressreleases/orders20260515a.htm" target="_blank" rel="noopener">
+              <div class="card-source">federalreserve.gov</div>
+              <div class="card-title">Federal Reserve Board announces approval of application by the Stephen M. Calk 2025 Trust</div>
+              <div class="card-summary">Federal Reserve Board announces approval of application by the Stephen M. Calk 2025 Trust...</div>
+              <div class="card-footer">
+                <span class="card-date">Fri, 15 May 2026</span>
+                <span class="card-read">Read →</span>
+              </div>
+            </a></div>
+        </div>
+      </div>
+      <aside class="news-sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-title">Market Snapshot</div>
+          <div class="market-item"><span class="market-name">S&amp;P 500</span><span class="market-val up">▲ 5,312.41</span></div>
+          <div class="market-item"><span class="market-name">Nasdaq</span><span class="market-val up">▲ 18,671.29</span></div>
+          <div class="market-item"><span class="market-name">Dow Jones</span><span class="market-val dn">▼ 39,118.86</span></div>
+          <div class="market-item"><span class="market-name">Russell 2000</span><span class="market-val up">▲ 2,041.33</span></div>
+          <div class="market-item"><span class="market-name">10-Yr Yield</span><span class="market-val">4.42%</span></div>
+          <div class="market-item"><span class="market-name">Gold</span><span class="market-val up">▲ $2,418</span></div>
+          <div class="market-item"><span class="market-name">WTI Oil</span><span class="market-val dn">▼ $78.12</span></div>
+          <div class="market-item"><span class="market-name">Bitcoin</span><span class="market-val up">▲ $68,420</span></div>
+          <div style="font-family:var(--mono);font-size:10px;color:#aaa;margin-top:8px;">* Prices update via pipeline</div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-title">Top Dividends</div>
+          <table class="div-table">
+            <tr><td class='sym'>T</td><td style='font-size:11px;color:#666'>AT&T</td><td class='yld'>6.8%</td></tr><tr><td class='sym'>MO</td><td style='font-size:11px;color:#666'>Altria Group</td><td class='yld'>8.2%</td></tr><tr><td class='sym'>VZ</td><td style='font-size:11px;color:#666'>Verizon</td><td class='yld'>6.5%</td></tr><tr><td class='sym'>PFE</td><td style='font-size:11px;color:#666'>Pfizer</td><td class='yld'>5.9%</td></tr><tr><td class='sym'>KMI</td><td style='font-size:11px;color:#666'>Kinder Morgan</td><td class='yld'>6.1%</td></tr>
+          </table>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-title">Disclaimer</div>
+          <p style="font-size:11px;color:#888;line-height:1.6;">DailyMarketCheck is for informational purposes only. Nothing on this site constitutes financial advice. Always consult a licensed financial advisor before making investment decisions.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- ── DIVIDENDS PAGE ── -->
+  <div class="page" id="page-dividends">
+    <div class="data-page">
+      <h1>Highest Dividend Stocks</h1>
+      <div class="subtitle">Updated monthly · Sorted by yield · Not financial advice</div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Ticker</th><th>Company</th><th>Dividend Yield</th><th>Sector</th>
+          </tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td class="ticker">T</td>
+          <td>AT&T</td>
+          <td class="yield-val">6.8%</td>
+          <td><span class="sector-badge">Telecom</span></td>
+        </tr>
+        <tr>
+          <td class="ticker">MO</td>
+          <td>Altria Group</td>
+          <td class="yield-val">8.2%</td>
+          <td><span class="sector-badge">Consumer</span></td>
+        </tr>
+        <tr>
+          <td class="ticker">VZ</td>
+          <td>Verizon</td>
+          <td class="yield-val">6.5%</td>
+          <td><span class="sector-badge">Telecom</span></td>
+        </tr>
+        <tr>
+          <td class="ticker">PFE</td>
+          <td>Pfizer</td>
+          <td class="yield-val">5.9%</td>
+          <td><span class="sector-badge">Healthcare</span></td>
+        </tr>
+        <tr>
+          <td class="ticker">KMI</td>
+          <td>Kinder Morgan</td>
+          <td class="yield-val">6.1%</td>
+          <td><span class="sector-badge">Energy</span></td>
+        </tr>
+        <tr>
+          <td class="ticker">ABBV</td>
+          <td>AbbVie</td>
+          <td class="yield-val">3.8%</td>
+          <td><span class="sector-badge">Healthcare</span></td>
+        </tr>
+        <tr>
+          <td class="ticker">CVX</td>
+          <td>Chevron</td>
+          <td class="yield-val">4.2%</td>
+          <td><span class="sector-badge">Energy</span></td>
+        </tr>
+        <tr>
+          <td class="ticker">IBM</td>
+          <td>IBM</td>
+          <td class="yield-val">3.3%</td>
+          <td><span class="sector-badge">Technology</span></td>
+        </tr></tbody>
+      </table>
+      <div class="disclaimer" style="margin-top:20px;">
+        ⚠ Dividend yields are estimates and change with stock price and dividend announcements. Always verify with your broker before investing. Past performance does not guarantee future dividends.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── IPO CALENDAR PAGE ── -->
+  <div class="page" id="page-ipos">
+    <div class="data-page">
+      <h1>IPO Calendar</h1>
+      <div class="subtitle">Upcoming &amp; recent IPOs · Updated weekly</div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Ticker</th><th>Company</th><th>Date</th><th>Exchange</th><th>Expected Price</th><th>Sector</th>
+          </tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td class="ticker">—</td>
+          <td>Check pipeline for latest IPO calendar</td>
+          <td>Updated weekly</td>
+          <td>NYSE/NASDAQ</td>
+          <td class="ipo-price">—</td>
+          <td><span class="sector-badge">—</span></td>
+        </tr></tbody>
+      </table>
+      <div class="disclaimer" style="margin-top:20px;">
+        ⚠ IPO dates and price ranges are estimates and subject to change. This is not a solicitation to buy any security. Always read the S-1 prospectus before investing in any IPO.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ABOUT PAGE ── -->
+  <div class="page" id="page-about">
+    <div class="about-wrap">
+      <h1>About DailyMarketCheck</h1>
+      <p>DailyMarketCheck is an independent financial news aggregator that pulls articles from major financial publications and uses AI to generate concise summaries — so you can stay informed without information overload.</p>
+      <p>Coverage includes stocks, bonds, IPOs, dividend investing, ETFs, cryptocurrency, and macroeconomic news. The site updates daily via an automated pipeline powered by Claude AI.</p>
+      <p>Featured sources include MarketWatch, The Wall Street Journal, Yahoo Finance, Seeking Alpha, CoinDesk, and more.</p>
+      <div class="disclaimer">
+        <strong>⚠ Financial Disclaimer</strong><br/>
+        DailyMarketCheck is an informational service only. Nothing published here constitutes financial, investment, tax, or legal advice. All data, prices, and news summaries are for general informational purposes and may not be accurate or up to date. Past market performance is not indicative of future results. Always consult a qualified financial advisor, accountant, or attorney before making any investment or financial decision.
+      </div>
+    </div>
+  </div>
+
+</div><!-- /site-wrap -->
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div>© 2026 DailyMarketCheck &nbsp;·&nbsp; Powered by Claude AI &nbsp;·&nbsp; Updated daily at 6:30 AM ET</div>
+  <div class="disclaimer-footer">For informational purposes only. Not financial advice. Always consult a licensed financial advisor before investing.</div>
+</footer>
+
+<script>
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function showCat(catId) {
+  document.querySelectorAll('.cat-section').forEach(s => s.style.display = 'none');
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  var el = document.getElementById('cat-' + catId);
+  if (el) el.style.display = 'block';
+  var btn = document.getElementById('catbtn-' + catId);
+  if (btn) btn.classList.add('active');
+}
+</script>
+</body>
+</html>
