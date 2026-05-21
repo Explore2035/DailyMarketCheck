@@ -1,6 +1,7 @@
 name: DailyMarketCheck – Build & Deploy
 on:
   schedule:
+  - cron: '* 13-20 * * 1-5'
     # 6:30 AM ET = 11:30 AM UTC (EST) / 10:30 AM UTC (EDT)
     - cron: '30 11 * * 1-5'   # Weekdays only (Mon–Fri)
     - cron: '30 13 * * 6'     # Saturday lighter update
@@ -31,3 +32,19 @@ jobs:
           git add index.html
           git diff --cached --quiet || git commit -m "🏦 Market update $(date -u +'%Y-%m-%d %H:%M UTC')"
           git push
+          update-prices:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests
+      - env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+        run: python prices.py
+      - run: |
+          git config user.name "Bot"
+          git config user.email "bot@dailymarketcheck.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Update prices" && git push
