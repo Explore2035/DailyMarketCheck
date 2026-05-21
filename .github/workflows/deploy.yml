@@ -1,38 +1,32 @@
-name: DailyMarketCheck – Build & Deploy
+name: DailyMarketCheck
 on:
   schedule:
-  - cron: '* 13-20 * * 1-5'
-    # 6:30 AM ET = 11:30 AM UTC (EST) / 10:30 AM UTC (EDT)
-    - cron: '30 11 * * 1-5'   # Weekdays only (Mon–Fri)
-    - cron: '30 13 * * 6'     # Saturday lighter update
-  workflow_dispatch:            # Manual trigger anytime
+    - cron: '30 11 * * 1-5'
+    - cron: '30 13 * * 6'
+    - cron: '* 13-20 * * 1-5'
+  workflow_dispatch:
 permissions:
   contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install dependencies
-        run: pip install anthropic feedparser requests
-      - name: Run DailyMarketCheck pipeline
-        env:
+      - run: pip install anthropic feedparser requests
+      - env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
         run: python pipeline.py
-      - name: Commit & push index.html
-        run: |
+      - run: python prices.py 2>/dev/null || true
+      - run: |
           git config user.name "DailyMarketCheck Bot"
           git config user.email "bot@dailymarketcheck.com"
           git add index.html
-          git diff --cached --quiet || git commit -m "🏦 Market update $(date -u +'%Y-%m-%d %H:%M UTC')"
-          git push
-          update-prices:
+          git diff --cached --quiet || git commit -m "Market update $(date -u +'%Y-%m-%d %H:%M UTC')" && git push
+  update-prices:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
